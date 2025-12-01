@@ -1,18 +1,42 @@
 <template>
   <v-app>
     <SiteHeader />
-    <router-view v-slot="{ Component }">
-      <transition name="fade" mode="out-in">
-        <component :is="Component" />
-      </transition>
-    </router-view>
+    <!-- Menu page needs special handling -->
+    <component :is="currentComponent" />
     <SiteFooter />
   </v-app>
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 import SiteFooter from '@/components/layout/SiteFooter.vue'
+import Home from '@/views/Home.vue'
+import Menu from '@/views/Menu.vue'
+import About from '@/views/About.vue'
+import Visit from '@/views/Visit.vue'
+import Gallery from '@/views/Gallery.vue'
+import Contact from '@/views/Contact.vue'
+
+const route = useRoute()
+
+const currentComponent = computed(() => {
+  switch (route.name) {
+    case 'Menu':
+      return Menu
+    case 'About':
+      return About
+    case 'Visit':
+      return Visit
+    case 'Gallery':
+      return Gallery
+    case 'Contact':
+      return Contact
+    default:
+      return Home
+  }
+})
 </script>
 
 <style>
@@ -22,15 +46,19 @@ import SiteFooter from '@/components/layout/SiteFooter.vue'
 }
 
 .v-btn {
-  border-radius: 4px !important;
+  border-radius: 2px !important;
 }
 
 .v-text-field .v-field {
-  border-radius: 4px !important;
+  border-radius: 2px !important;
+}
+
+.v-select .v-field {
+  border-radius: 2px !important;
 }
 
 .v-dialog .v-card {
-  border-radius: 8px !important;
+  border-radius: 4px !important;
 }
 
 /* Custom scrollbar */
@@ -44,7 +72,7 @@ import SiteFooter from '@/components/layout/SiteFooter.vue'
 
 ::-webkit-scrollbar-thumb {
   background: #064898;
-  border-radius: 4px;
+  border-radius: 2px !important;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -68,60 +96,43 @@ import SiteFooter from '@/components/layout/SiteFooter.vue'
   font-variant-numeric: tabular-nums;
 }
 
-/* Menu-specific animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+/* CRITICAL FIX FOR MENU PAGE */
+/* Remove Vuetify layout constraints */
+.v-main {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.v-main__wrap {
+  display: block !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+}
+
+/* Force menu page to be full width */
+.menu-page {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Hide sidebar container completely on mobile */
+@media (max-width: 959px) {
+  .desktop-sidebar-container {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.menu-section {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-/* Custom scrollbar for menu */
-.menu-sidebar .v-navigation-drawer__content {
-  scrollbar-width: thin;
-  scrollbar-color: #064898 #f1f1f1;
-}
-
-.menu-sidebar .v-navigation-drawer__content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.menu-sidebar .v-navigation-drawer__content::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.menu-sidebar .v-navigation-drawer__content::-webkit-scrollbar-thumb {
-  background: #064898;
-  border-radius: 3px;
-}
-
-/* Price glow effect */
-.price-display {
-  position: relative;
-}
-
-.price-display::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(235, 209, 115, 0.1), transparent);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.drink-card:hover .price-display::after {
-  opacity: 1;
 }
 </style>

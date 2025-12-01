@@ -1,142 +1,148 @@
 <template>
-  <v-main>
+  <div class="menu-page">
     <!-- Hero Header -->
     <div class="menu-hero">
-      <!-- Add filter to menu hero -->
       <div class="hero-filter"></div>
-      <v-container>
+      <div class="hero-container">
         <div class="hero-content">
-          <h1 class="text-h1 font-weight-bold text-white mb-4">
-            Our Menu
-          </h1>
-          <p class="text-h5 text-white mb-6">
-            Where tradition meets innovation in every cup
-          </p>
+          <h1 class="menu-hero-title">Our Menu</h1>
+          <p class="menu-hero-subtitle">Where tradition meets innovation in every cup</p>
           <div class="hero-stats">
-            <v-chip class="mr-2" color="white" variant="flat">
-              <v-icon icon="mdi-coffee" class="mr-2" color="primary"></v-icon>
-              {{ totalDrinks }} Unique Drinks
-            </v-chip>
-            <v-chip class="mr-2" color="white" variant="flat">
-              <v-icon icon="mdi-star" class="mr-2" color="secondary"></v-icon>
+            <span class="stat-chip">
+              <v-icon icon="mdi-coffee" size="small" class="mr-1" color="primary"></v-icon>
+              {{ totalDrinks }} Drinks
+            </span>
+            <span class="stat-chip">
+              <v-icon icon="mdi-star" size="small" class="mr-1" color="secondary"></v-icon>
               {{ bestsellerCount }} Bestsellers
-            </v-chip>
-            <v-chip color="white" variant="flat">
-              <v-icon icon="mdi-clock" class="mr-2" color="primary"></v-icon>
+            </span>
+            <span class="stat-chip">
+              <v-icon icon="mdi-clock" size="small" class="mr-1" color="primary"></v-icon>
               Fresh Daily
-            </v-chip>
+            </span>
           </div>
         </div>
-      </v-container>
+      </div>
     </div>
 
-    <!-- Main Content -->
-    <v-container class="mt-8">
-      <v-row>
-        <!-- Menu Content -->
-        <v-col cols="12" lg="9">
-          <!-- Search and Filter -->
-          <v-card class="mb-8 pa-4" variant="flat">
-            <v-row align="center">
-              <v-col cols="12" md="8">
-                <v-text-field
-                  v-model="search"
-                  placeholder="Search for drinks or ingredients..."
-                  prepend-inner-icon="mdi-magnify"
-                  variant="outlined"
-                  density="comfortable"
-                  hide-details
-                  clearable
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12" md="4">
-                <div class="d-flex gap-2">
-                  <v-btn
-                    variant="outlined"
-                    color="primary"
-                    @click="showBestsellers = !showBestsellers"
-                    :class="{ 'active-filter': showBestsellers }"
-                  >
-                    <v-icon icon="mdi-star" class="mr-1"></v-icon>
-                    Bestsellers
-                  </v-btn>
-                  <v-btn
-                    variant="outlined"
-                    color="primary"
-                    @click="showNewItems = !showNewItems"
-                    :class="{ 'active-filter': showNewItems }"
-                  >
-                    <v-icon icon="mdi-new-box" class="mr-1"></v-icon>
-                    New
-                  </v-btn>
-                </div>
-              </v-col>
-            </v-row>
-          </v-card>
-
-          <!-- Menu Sections -->
-          <div ref="sectionsContainer" class="menu-sections-container">
-            <div 
-              v-for="(section, index) in filteredSections" 
-              :key="section.title"
-              :ref="el => sectionRefs[index] = el"
-              class="section-observer"
-              :data-section-index="index"
-            >
-              <MenuSection
-                :section="section"
-                :section-index="index"
-                @scroll-to-section="scrollToSection"
-              />
-            </div>
-          </div>
-
-          <!-- Empty State -->
-          <v-card
-            v-if="filteredSections.length === 0"
-            class="text-center pa-12"
-            variant="flat"
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav-container" v-if="!isDesktop">
+      <div class="mobile-nav">
+        <h4>Menu Sections</h4>
+        <div class="mobile-chips">
+          <button
+            v-for="(section, index) in filteredSections"
+            :key="section.title"
+            @click="scrollToSection(index)"
+            :class="{ 'active': activeSection === index }"
+            class="mobile-chip"
           >
-            <v-icon icon="mdi-coffee-off" size="64" color="primary" class="mb-4"></v-icon>
-            <h3 class="text-h5 font-weight-bold text-primary mb-2">No items found</h3>
-            <p class="text-body-1 text-medium-emphasis">Try adjusting your search or filters</p>
-            <v-btn color="primary" class="mt-4" @click="clearFilters">
-              Clear Filters
+            <v-icon :icon="section.icon" size="x-small" class="mr-1"></v-icon>
+            {{ getSectionShortName(section.title) }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content-area">
+      <!-- Desktop Sidebar -->
+      <div class="desktop-sidebar-container" v-if="isDesktop">
+        <MenuSidebar
+          :sections="filteredSections"
+          :active-section="activeSection"
+          :popular-items="popularItems"
+          @scroll-to-section="scrollToSection"
+        />
+      </div>
+
+      <!-- Main Content -->
+      <div class="main-content-wrapper">
+        <!-- Search and Filter -->
+        <div class="search-filter-container">
+          <div class="search-wrapper">
+            <v-text-field
+              v-model="search"
+              placeholder="Search drinks..."
+              prepend-inner-icon="mdi-magnify"
+              variant="outlined"
+              density="comfortable"
+              hide-details
+              clearable
+              class="search-field"
+            ></v-text-field>
+          </div>
+          <div class="filter-buttons">
+            <v-btn
+              variant="outlined"
+              color="primary"
+              size="small"
+              @click="showBestsellers = !showBestsellers"
+              :class="{ 'active-filter': showBestsellers }"
+            >
+              <v-icon icon="mdi-star" size="small" class="mr-1"></v-icon>
+              Bestsellers
             </v-btn>
-          </v-card>
-        </v-col>
+            <v-btn
+              variant="outlined"
+              color="primary"
+              size="small"
+              @click="showNewItems = !showNewItems"
+              :class="{ 'active-filter': showNewItems }"
+            >
+              <v-icon icon="mdi-new-box" size="small" class="mr-1"></v-icon>
+              New
+            </v-btn>
+          </div>
+        </div>
 
-        <!-- Sidebar -->
-        <v-col cols="12" lg="3">
-          <MenuSidebar
-            :sections="filteredSections"
-            :active-section="activeSection"
-            :popular-items="popularItems"
-            @scroll-to-section="scrollToSection"
-          />
-        </v-col>
-      </v-row>
-    </v-container>
+        <!-- Menu Sections -->
+        <div ref="sectionsContainer" class="sections-container">
+          <div 
+            v-for="(section, index) in filteredSections" 
+            :key="section.title"
+            :ref="el => sectionRefs[index] = el"
+            class="section-wrapper"
+            :data-section-index="index"
+          >
+            <MenuSection
+              :section="section"
+              :section-index="index"
+            />
+          </div>
+        </div>
 
-    <!-- Floating Action Button -->
-    <v-fab
-      v-model="showFab"
-      location="bottom right"
-      size="large"
-      color="primary"
-      class="menu-fab"
-    >
-      <template v-slot:activator="{ props }">
-        <v-btn
-          v-bind="props"
-          icon="mdi-arrow-up"
-          color="primary"
-          size="large"
+        <!-- Empty State -->
+        <div v-if="filteredSections.length === 0" class="empty-state-container">
+          <v-icon icon="mdi-coffee-off" size="64" color="primary" class="mb-4"></v-icon>
+          <h3>No items found</h3>
+          <p>Try adjusting your search or filters</p>
+          <v-btn color="primary" class="mt-4" size="large" @click="clearFilters">
+            Clear Filters
+          </v-btn>
+        </div>
+
+        <!-- Mobile Back to Top -->
+        <button
+          v-if="showFab && !isDesktop"
           @click="scrollToTop"
-        ></v-btn>
-      </template>
-    </v-fab>
-  </v-main>
+          class="mobile-back-top-btn"
+        >
+          <v-icon icon="mdi-arrow-up" class="mr-2"></v-icon>
+          Back to Top
+        </button>
+      </div>
+    </div>
+
+    <!-- Desktop Floating Button -->
+    <button
+      v-if="showFab && isDesktop"
+      @click="scrollToTop"
+      class="desktop-fab-btn"
+    >
+      <v-icon icon="mdi-arrow-up" size="24"></v-icon>
+    </button>
+  </div>
 </template>
 
 <script setup>
@@ -154,6 +160,7 @@ const activeSection = ref(0)
 const sectionsContainer = ref(null)
 const sectionRefs = ref([])
 let observer = null
+const isDesktop = ref(window.innerWidth >= 960)
 
 // Computed
 const totalDrinks = computed(() => {
@@ -192,12 +199,35 @@ const filteredSections = computed(() => {
     .filter(section => section !== null)
 })
 
-// Watch for filter changes to reset active section
-watch([search, showBestsellers, showNewItems], () => {
-  // Reset active section when filters change
-  activeSection.value = 0
+// Helper function for mobile section names
+const getSectionShortName = (title) => {
+  const cleanTitle = title
+    .replace('\u2728 ', '')
+    .replace('\u26a1 ', '')
+    .replace('\U0001f9ca ', '')
+    .replace('\U0001f366 ', '')
+    .replace('\U0001fae7 ', '')
+    .replace('\u2615 ', '')
+    .replace('\U0001f96a ', '')
+    .replace('\u2795 ', '')
+    .replace('\U0001f95b ', '')
   
-  // Re-initialize observer after DOM updates
+  const shortNames = {
+    'CRAFTED SIPS': 'Crafted',
+    'ICE BLENDED DRINKS - COFFEE BASED': 'Coffee',
+    'ICE BLENDED DRINKS - CREAM BASED': 'Cream',
+    'SIP AND FIZZ': 'Fizz',
+    'REGULAR SIPS': 'Regular',
+    'ADD ONS': 'Add-ons',
+    'MILK OPTION': 'Milk'
+  }
+  
+  return shortNames[cleanTitle] || cleanTitle.split(' - ')[0] || cleanTitle
+}
+
+// Watch for filter changes
+watch([search, showBestsellers, showNewItems], () => {
+  activeSection.value = 0
   nextTick(() => {
     if (observer) {
       observer.disconnect()
@@ -209,17 +239,15 @@ watch([search, showBestsellers, showNewItems], () => {
 // Methods
 const scrollToSection = (index) => {
   if (sectionRefs.value[index]) {
-    sectionRefs.value[index].scrollIntoView({ 
-      behavior: 'smooth',
-      block: 'start'
-    })
-    // Temporarily set active section, observer will update it correctly
-    activeSection.value = index
+    const offset = isDesktop.value ? 100 : 80
+    const elementTop = sectionRefs.value[index].offsetTop - offset
     
-    // Add a small delay to let scroll complete before observer takes over
-    setTimeout(() => {
-      setupIntersectionObserver()
-    }, 300)
+    window.scrollTo({
+      top: elementTop,
+      behavior: 'smooth'
+    })
+    
+    activeSection.value = index
   }
 }
 
@@ -237,15 +265,15 @@ const clearFilters = () => {
   showNewItems.value = false
 }
 
-// Intersection Observer for active section detection
+// Intersection Observer
 const setupIntersectionObserver = () => {
   if (observer) {
     observer.disconnect()
   }
 
   const options = {
-    root: null, // viewport
-    rootMargin: '-100px 0px -70% 0px', // Adjust these values to control when section becomes active
+    root: null,
+    rootMargin: '-80px 0px -70% 0px',
     threshold: 0
   }
 
@@ -260,7 +288,6 @@ const setupIntersectionObserver = () => {
     })
   }, options)
 
-  // Observe all section elements
   sectionRefs.value.forEach((sectionEl, index) => {
     if (sectionEl) {
       sectionEl.dataset.sectionIndex = index
@@ -270,15 +297,17 @@ const setupIntersectionObserver = () => {
 }
 
 const handleScroll = () => {
-  // Show/hide FAB
   showFab.value = window.scrollY > 500
+}
+
+const handleResize = () => {
+  isDesktop.value = window.innerWidth >= 960
 }
 
 // Lifecycle
 onMounted(() => {
   window.addEventListener('scroll', handleScroll)
-  
-  // Setup observer after DOM is fully rendered
+  window.addEventListener('resize', handleResize)
   nextTick(() => {
     setupIntersectionObserver()
   })
@@ -286,6 +315,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
+  window.removeEventListener('resize', handleResize)
   if (observer) {
     observer.disconnect()
   }
@@ -293,28 +323,30 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* Reset everything for menu page */
+.menu-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Hero Section */
 .menu-hero {
   background: linear-gradient(135deg, #064898 0%, #0a5cbf 100%);
-  padding: 80px 0 40px;
+  padding: 40px 0 20px;
   position: relative;
   overflow: hidden;
 }
 
-.menu-hero::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url('https://images.unsplash.com/photo-1442512595331-e89e73853f31?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
-  background-size: cover;
-  background-position: center;
-  opacity: 0.1;
+.hero-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 16px;
 }
 
-/* Added filter for menu hero */
-.menu-hero .hero-filter {
+.hero-filter {
   position: absolute;
   top: 0;
   left: 0;
@@ -334,80 +366,318 @@ onUnmounted(() => {
   position: relative;
   z-index: 2;
   max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.menu-hero-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+.menu-hero-subtitle {
+  font-size: 1.125rem;
+  color: white;
+  margin-bottom: 24px;
 }
 
 .hero-stats {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  justify-content: center;
+  gap: 8px;
 }
 
-.hero-stats .v-chip {
+.stat-chip {
+  background: white;
+  padding: 6px 12px;
+  border-radius: 2px;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  color: #064898;
+}
+
+/* Mobile Navigation */
+.mobile-nav-container {
+  width: 100%;
+  position: sticky;
+  top: 64px;
+  z-index: 9;
+  background: white;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.mobile-nav {
+  padding: 12px 16px;
+}
+
+.mobile-nav h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #064898;
+  margin-bottom: 8px;
+}
+
+.mobile-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-chip {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border: 1px solid #064898;
+  border-radius: 2px;
+  background: white;
+  color: #064898;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.mobile-chip.active {
+  background: #064898;
+  color: white;
+}
+
+/* Main Content Area */
+.main-content-area {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  gap: 24px;
+  padding: 0 16px;
+}
+
+/* Desktop Sidebar */
+.desktop-sidebar-container {
+  width: 300px;
+  flex-shrink: 0;
+  display: none;
+}
+
+/* Main Content Wrapper */
+.main-content-wrapper {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+/* Search and Filter */
+.search-filter-container {
+  background: white;
+  padding: 16px;
+  margin: 16px 0 24px;
+  border-radius: 4px;
+}
+
+.search-wrapper {
+  margin-bottom: 16px;
+}
+
+.search-field :deep(.v-field) {
   border-radius: 2px !important;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 8px;
 }
 
 .active-filter {
-  background-color: rgba(6, 72, 152, 0.1);
-  border-color: #064898;
+  background-color: rgba(6, 72, 152, 0.1) !important;
+  border-color: #064898 !important;
 }
 
-.menu-fab {
+/* Sections */
+.sections-container {
+  width: 100%;
+}
+
+.section-wrapper {
+  margin-bottom: 48px;
+}
+
+/* Empty State */
+.empty-state-container {
+  text-align: center;
+  padding: 48px 16px;
+  background: white;
+  border-radius: 4px;
+  margin: 24px 0;
+}
+
+.empty-state-container h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #064898;
+  margin-bottom: 8px;
+}
+
+.empty-state-container p {
+  color: #666;
+  margin-bottom: 16px;
+}
+
+/* Back to Top Buttons */
+.mobile-back-top-btn {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  background: #064898;
+  color: white;
+  border: none;
+  padding: 16px;
+  border-radius: 2px;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.desktop-fab-btn {
   position: fixed;
   bottom: 32px;
   right: 32px;
+  background: #064898;
+  color: white;
+  border: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
   z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-/* Updated card styles for less rounding */
-.menu-fab .v-btn {
-  border-radius: 2px !important;
-}
-
-.v-card {
-  border-radius: 4px !important;
-}
-
-.v-text-field .v-field {
-  border-radius: 2px !important;
-}
-
-.v-btn {
-  border-radius: 2px !important;
-}
-
-/* Section observer styling */
-.section-observer {
-  margin-bottom: 64px;
-  position: relative;
-}
-
-.menu-sections-container {
-  position: relative;
-}
-
-@media (max-width: 1264px) {
-  .hero-content h1 {
-    font-size: 2.5rem !important;
+/* Responsive Design */
+@media (max-width: 599px) {
+  .hero-container,
+  .main-content-area {
+    padding: 0 16px;
   }
   
-  .hero-content p {
-    font-size: 1.25rem !important;
+  .mobile-nav-container {
+    display: block;
+  }
+  
+  .desktop-sidebar-container {
+    display: none;
+  }
+  
+  .main-content-wrapper {
+    width: 100%;
+  }
+  
+  .menu-hero-title {
+    font-size: 1.75rem;
+  }
+  
+  .menu-hero-subtitle {
+    font-size: 1rem;
+  }
+  
+  .main-content-area {
+    flex-direction: column;
   }
 }
 
-@media (max-width: 960px) {
+@media (min-width: 600px) and (max-width: 959px) {
+  .hero-container,
+  .main-content-area {
+    padding: 0 24px;
+  }
+  
   .menu-hero {
     padding: 60px 0 30px;
   }
   
-  .hero-content h1 {
-    font-size: 2rem !important;
+  .menu-hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .menu-hero-subtitle {
+    font-size: 1.25rem;
+  }
+  
+  .stat-chip {
+    font-size: 1rem;
+    padding: 8px 16px;
+  }
+  
+  .mobile-nav-container {
+    display: none;
+  }
+  
+  .desktop-sidebar-container {
+    display: none;
   }
 }
 
-@media (max-width: 600px) {
-  .hero-stats {
-    justify-content: center;
+@media (min-width: 960px) {
+  .hero-container,
+  .main-content-area {
+    padding: 0 32px;
+  }
+  
+  .menu-hero {
+    padding: 80px 0 40px;
+  }
+  
+  .menu-hero-title {
+    font-size: 3rem;
+  }
+  
+  .menu-hero-subtitle {
+    font-size: 1.5rem;
+  }
+  
+  .mobile-nav-container {
+    display: none;
+  }
+  
+  .desktop-sidebar-container {
+    display: block;
+    position: sticky;
+    top: 80px;
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+    align-self: flex-start;
+  }
+  
+  .main-content-area {
+    position: relative;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero-container,
+  .main-content-area {
+    padding: 0 48px;
   }
 }
 </style>
